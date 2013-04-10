@@ -90,14 +90,29 @@ def detail(id):
     utf8_parser = etree.HTMLParser(encoding='utf-8')
     tree = etree.fromstring(r.text.encode('utf-8'), parser=utf8_parser)
 
+    obj = {'title': ''}
+
     title = tree.xpath("//h1")[0].text
 
-    return {'title': title}
+    m = re.search('([\w\s]+)', title)
+    obj['title'] = m.group(1).strip() if m else ''
+
+    m = re.search('\(([\w\s]+)\)', title)
+    obj['expansion'] = m.group(1).strip() if m else ''
+
+    table = tree.xpath("//table[contains(@class, 'infoTable')]/tbody")[0]
+
+    obj['rarity'] = table.xpath("tr[1]/td[2]/img/@alt")[0]
+    obj['number'] = int(table.xpath("tr[2]/td[2]")[0].text)
+
+    expansions = []
+    for e in table.xpath('tr[3]/td[2]/div[@class="expansionsBox"]/a/@href'):
+        print e
+
+    return obj
 
 if __name__ == '__main__':
     # for r in search('magic'):
     #     print r
 
-    print detail('Control_Magic_Unlimited.c1p4733.prod')
-
-
+    print detail('Negate_Duels_of_the_Planeswalkers_Decks.c1p240492.prod')
