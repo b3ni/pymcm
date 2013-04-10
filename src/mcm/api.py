@@ -20,8 +20,7 @@ def search(query, lang='en'):
 
         print "PAGE: {0}/{1}".format(pagenow, npages)
         utf8_parser = etree.HTMLParser(encoding='utf-8')
-        s = r.text.encode('utf-8')
-        tree = etree.fromstring(s, parser=utf8_parser)
+        tree = etree.fromstring(r.text.encode('utf-8'), parser=utf8_parser)
 
         # number of pages
         if npages is None:
@@ -83,6 +82,22 @@ def search(query, lang='en'):
         # next page
         pagenow += 1
 
+
+def detail(id):
+    r = requests.get(BASE + id)
+    r.raise_for_status()
+
+    utf8_parser = etree.HTMLParser(encoding='utf-8')
+    tree = etree.fromstring(r.text.encode('utf-8'), parser=utf8_parser)
+
+    title = tree.xpath("//h1")[0].text
+
+    return {'title': title}
+
 if __name__ == '__main__':
-    for r in search('magic'):
-        print r
+    # for r in search('magic'):
+    #     print r
+
+    print detail('Control_Magic_Unlimited.c1p4733.prod')
+
+
