@@ -105,14 +105,95 @@ def detail(id):
     obj['rarity'] = table.xpath("tr[1]/td[2]/img/@alt")[0]
     obj['number'] = int(table.xpath("tr[2]/td[2]")[0].text)
 
-    expansions = []
-    for e in table.xpath('tr[3]/td[2]/div[@class="expansionsBox"]/a/@href'):
-        print e
-
     return obj
+
+
+def list_prices(id, only_personal_seller=False, type_seller=None, language=None, condition=None, foil=None, signed=None, altered=None, amount=None):
+    qs = {'mainPage': 'showProduct', 'idCategory': 0, 'idProduct': 0}
+
+    m = re.search("c(\d+)p(\d+)", id)
+    if m:
+        qs['idCategory'] = m.group(1)
+        qs['idProduct'] = m.group(2)
+
+    if only_personal_seller:
+        qs['productFilter[onlyPro]'] = 'on'
+
+    if type_seller is not None:
+        qs['productFilter[sellerRatings][]'] = type_seller
+
+    if language is not None:
+        qs['productFilter[idLanguage][]'] = language
+
+    if condition is not None:
+        qs['productFilter[condition][]'] = condition
+
+    if foil is not None:
+        qs['productFilter[isFoil]'] = foil
+
+    if signed is not None:
+        qs['productFilter[isSigned]'] = signed
+
+    if altered is not None:
+        qs['productFilter[isAltered]'] = altered
+
+    if amount is not None:
+        qs['productFilter[minAmount]'] = amount
+
+    r = requests.get(BASE + id, params=qs)
+    r.raise_for_status()
+
+    utf8_parser = etree.HTMLParser(encoding='utf-8')
+    tree = etree.fromstring(r.text.encode('utf-8'), parser=utf8_parser)
+
+    # results?
+    node = tree.xpath('//*[@id="siteContents"]/p[@class="warn bigFont"]')
+    if len(node):
+        return
+
+    # table results
+    tree = tree.xpath("//table[contains(@class, 'specimenTable')]/tbody")
+    if len(tree) == 0:
+        return
+    tree = tree[0]
+
+    for row in tree.xpath("tr"):
+        result = {'seller_id': '', 'seller_name': '', 'seller_value': ''}
+
+        # sellers data
+        for span in row.xpath("td[1]/span"):
+
+
+
+        data = row.xpath("td[1]/span/span[1]/a")
+        if data:
+            result['seller_id'] = data[0].attrib['href']
+            result['seller_name'] = data[0].text
+
+        data = row.xpath("td[1]/span/span[1]/text()")
+        if data:
+            result['seller_value'] = data[0].strip()[1:-1]
+
+        data = row.xpath("td[1]/span/span[2]/span/@onmouseover")
+        if data:
+            m = re.search("'Item location: ([\w\s]+)'", data[0])
+            result['seller_location'] = m.group(1)
+
+        yield result
+
+
+
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     # for r in search('magic'):
     #     print r
 
-    print detail('Negate_Duels_of_the_Planeswalkers_Decks.c1p240492.prod')
+    for p in list_prices('Rancor_Magic_2013.c1p256673.prod'):
+        print p
