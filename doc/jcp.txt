@@ -1,0 +1,49 @@
+http://stackoverflow.com/questions/3563126/url-encoding-decoding-with-python
+
+<button type="button" onclick="jcp('%7BAE%5B%5CD%40HsP%40Gs%60%7F%0D%02k_VSK%5Bl%25-.%266%04%0C%06%10%2A%2A%2A'+encodeURI('37716,'+ebid('sc_hashCode').value),'removeSeller','sc_ship_37716')">Remove items from this seller</button>
+
+function ebid(id)
+{
+    return document.getElementById(id);
+}
+
+function jcp(p,callback,loadingDivID)
+{
+    var r = getRequester();
+    var url = "/iajax.php";
+    p="args="+p;
+
+    if(loadingDivID)
+    {
+        var loadingDiv = document.getElementById(loadingDivID);
+        var ajaxLoader = document.getElementById("ajaxLoader").cloneNode(false);
+        var oldStylePos = getStyle(loadingDivID,"position");
+
+        loadingDiv.appendChild(ajaxLoader);
+        if( oldStylePos != "absolute" )
+        {
+            loadingDiv.style.position = "relative";
+        }
+        ajaxLoader.style.display = "block";
+    }
+
+    r.onreadystatechange=function()
+    {
+        if(r.readyState==4 && r.status==200)
+        {
+            if(loadingDivID)
+            {
+                loadingDiv.style.position = oldStylePos;
+                loadingDiv.removeChild(ajaxLoader);
+            }
+
+            window[callback](r.responseXML);
+        }
+    }
+
+    r.open("POST",url,true);
+    r.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    r.setRequestHeader("Content-length", p.length);
+    r.setRequestHeader("Connection", "close");
+    r.send(p);
+}

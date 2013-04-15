@@ -3,6 +3,7 @@ import mechanize
 import cookielib
 import error
 import models
+import urllib2
 
 import codecs
 import datetime
@@ -101,8 +102,20 @@ class MCMApi(object):
         self.br.follow_link(link)
         tree = etree.fromstring(self.br.response().read().decode('utf-8'), parser=utf8_parser)
 
-        c = models.Cart()
+        # create cart
+        c = models.Cart(tree.xpath('//*[@id="sc_hashCode"]/@value')[0])
+
+        # ships
         for shipnode in tree.xpath('//div[@class="sc_ShipTable"]'):
+            # id
+            shipid = int(shipnode.xpath('div/@id')[0].split('_')[-1])
+
+            # hash
+            bhash = shipnode.xpath('.//button/@onclick')[0]
+            m = re.search("jcp\('([^']+)'", bhash)
+            if m:
+                bhash = m.group(1)
+
             # sumary
             sumarynode = shipnode.xpath('.//table[@class="nestedContent"]')[2]
 
@@ -111,7 +124,7 @@ class MCMApi(object):
             seller = models.Seller(id=node.attrib['href'], name=node.text)
 
             # ship
-            s = models.Ship(seller=seller)
+            s = models.Ship(shipid, bhash, c, seller)
 
             # shipping
             node = sumarynode.xpath('tr[6]/td[2]/text()')[0]
@@ -158,23 +171,33 @@ class MCMApi(object):
 
                 s.articles.append(cardarticle)
 
-
-
-
-
-
-
-
-
-            #print self.node_text(node[0])
-
-
-
-
-
             c.ships.append(s)
 
         return c
+
+    def remove_ship_from_cart(self, ship):
+        if not ship.id:
+            return
+
+        url = "{0}iajax.php".format(self.base)
+        referer = "{0}?mainPage=showShoppingCart".format(self.base)
+
+        #urllib2.unquote("%7BAE%5B%5CD%40HsP%40Gs%60%7F%0D%02k_VSK%5Bl%25")
+        #<button type="button" onclick="jcp('%7BAE%5B%5CD%40HsP%40Gs%60%7F%0D%02k_VSK%5Bl%25-.%266%04%0C%06%10%2A%2A%2A'+encodeURI('37716,'+ebid('sc_hashCode').value),'removeSeller','sc_ship_37716')">Remove items from this seller</button>
+        hashremove = ship.hash + urllib2.quote(str(ship.id) + ship.cart.hash, safe='~@#$&()*!+=:;,.?/\'')
+        args
+
+        #response = self._create_ajax_request(url, referer)
+
+        print ""
+
+    def _create_ajax_request(self, url, referer):
+        req = mechanize.Request(url, " ")
+        req.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686; es-VE; rv:1.9.0.1)Gecko/2008071615 Debian/6.0 Firefox/9")
+        req.add_header("Referer", referer)
+        self.cj.add_cookie_header(req)
+
+        return mechanize.urlopen(req)
 
     def _page(self):
         text = self.br.response().read().decode('utf-8')
@@ -182,7 +205,7 @@ class MCMApi(object):
         with codecs.open("last{0}{1}{2}_{3}{4}{5}.html".format(t.year, t.month, t.day, t.hour, t.minute, t.second), "w", "utf-8") as f:
             f.write(text)
 
-    def node_text(self, node):
+    def _node_text(self, node):
         from lxml.etree import tostring
         return tostring(node)
 
@@ -190,11 +213,14 @@ class MCMApi(object):
 if __name__ == '__main__':
     from pprint import pprint
 
-    mcm = MCMApi(username='xx', password='xx')
+    mcm = MCMApi(username='x', password='x')
 
     mcm.login()
 
     cart = mcm.get_cart()
+    pprint(vars(cart))
+    print "=" * 10
+    print "=" * 10
 
     for s in cart.ships:
         pprint(vars(s))
@@ -203,6 +229,10 @@ if __name__ == '__main__':
             pprint(vars(a))
             pprint(vars(a.card))
         print "=" * 10
+
+        mcm.remove_ship_from_cart(s)
+
+    print cart.total()
 
     # for wl in mcm.get_wants_list():
     #     print wl

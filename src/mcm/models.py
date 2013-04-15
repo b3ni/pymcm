@@ -48,19 +48,25 @@ class CardArticle:
 
 
 class Ship:
-    def __init__(self, seller):
+    def __init__(self, id, hash, cart, seller):
+        self.id = id
+        self.hash = hash
+        self.cart = cart
         self.seller = seller
         self.shipping = 0
         self.shipping_method = ''
         self.articles = []
 
     def total(self):
-        return 0
+        total_articles = sum(a.price for a in self.articles)
+
+        return total_articles + self.shipping
 
 
 class Cart:
-    def __init__(self):
+    def __init__(self, hash):
+        self.hash = hash
         self.ships = []
 
     def total(self):
-        return 0
+        return sum(s.total() for s in self.ships)
