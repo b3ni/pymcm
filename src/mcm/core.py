@@ -29,7 +29,7 @@ class MCMApi(object):
         self.br.set_cookiejar(self.cj)
 
         self.br.set_handle_equiv(True)
-        self.br.set_handle_gzip(True)
+        #self.br.set_handle_gzip(True)
         self.br.set_handle_redirect(True)
         self.br.set_handle_referer(True)
         self.br.set_handle_robots(False)
@@ -85,7 +85,96 @@ class MCMApi(object):
         return wants_lists
 
     def get_cart(self):
-        pass
+        utf8_parser = etree.HTMLParser(encoding='utf-8')
+        tree = etree.fromstring(self.br.response().read().decode('utf-8'), parser=utf8_parser)
+
+        node = tree.xpath('//*[@id="sc_menuhub"]')
+        if node:
+            m = re.search("\((\d+) articles", node[0].text)
+            na = 0
+            if m:
+                na = int(m.group(1))
+            if na == 0:
+                return models.Cart()
+
+        link = self.br.find_link(url="/?mainPage=showShoppingCart")
+        self.br.follow_link(link)
+        tree = etree.fromstring(self.br.response().read().decode('utf-8'), parser=utf8_parser)
+
+        c = models.Cart()
+        for shipnode in tree.xpath('//div[@class="sc_ShipTable"]'):
+            # sumary
+            sumarynode = shipnode.xpath('.//table[@class="nestedContent"]')[2]
+
+            # read seller
+            node = sumarynode.xpath('.//a[contains(@href, "showSellerChart")]')[1]
+            seller = models.Seller(id=node.attrib['href'], name=node.text)
+
+            # ship
+            s = models.Ship(seller=seller)
+
+            # shipping
+            node = sumarynode.xpath('tr[6]/td[2]/text()')[0]
+            m = re.search("([\d,]+) ", node)
+            if m:
+                s.shipping = float(m.group(1).replace(',', '.'))
+
+            # shipping method
+            node = None
+            for tr in sumarynode.xpath('tr'):
+                td = tr.xpath('td/text()')[0]
+                if td.find('Shipping Method') != -1:
+                    node = tr
+            if node is not None:
+                m = re.search("\(([\w\s]+)\)", etree.tostring(node))
+                if m:
+                    s.shipping_method = m.group(1)
+
+            # items
+            for item in shipnode.xpath('.//form[contains(@name, "itemViewForm")]/table/tbody/tr'):
+                idcard = item.xpath('td[2]/a/@href')[0]
+                namecard = item.xpath('td[2]/a/text()')[0]
+                pricecard = item.xpath('td[9]/text()')[0]
+                m = re.search("([\d,]+) ", pricecard)
+                if m:
+                    pricecard = float(m.group(1).replace(',', '.'))
+
+                langcard = item.xpath('td[5]/a/span/@onmouseover')[0]
+                m = re.search("\('([\w\s]+)'\)", langcard)
+                if m:
+                    langcard = m.group(1)
+                expansion = item.xpath('td[3]/span/@onmouseover')[0]
+                m = re.search("\('([\w\s]+)'\)", expansion)
+                if m:
+                    expansion = m.group(1)
+                condition = item.xpath('td[6]/a/img/@onmouseover')[0]
+                m = re.search("\('([\w\s]+)'\)", condition)
+                if m:
+                    condition = m.group(1)
+                quantity = int(item.xpath('td[2]/text()')[0][0:-2])
+
+                card = models.Card(idcard, namecard)
+                cardarticle = models.CardArticle(card, pricecard, langcard, expansion, condition, quantity)
+
+                s.articles.append(cardarticle)
+
+
+
+
+
+
+
+
+
+            #print self.node_text(node[0])
+
+
+
+
+
+            c.ships.append(s)
+
+        return c
 
     def _page(self):
         text = self.br.response().read().decode('utf-8')
@@ -93,10 +182,27 @@ class MCMApi(object):
         with codecs.open("last{0}{1}{2}_{3}{4}{5}.html".format(t.year, t.month, t.day, t.hour, t.minute, t.second), "w", "utf-8") as f:
             f.write(text)
 
+    def node_text(self, node):
+        from lxml.etree import tostring
+        return tostring(node)
+
+
 if __name__ == '__main__':
-    mcm = MCMApi(username='xxx', password='xxx')
+    from pprint import pprint
+
+    mcm = MCMApi(username='xx', password='xx')
 
     mcm.login()
 
-    for wl in mcm.get_wants_list():
-        print wl
+    cart = mcm.get_cart()
+
+    for s in cart.ships:
+        pprint(vars(s))
+        pprint(vars(s.seller))
+        for a in s.articles:
+            pprint(vars(a))
+            pprint(vars(a.card))
+        print "=" * 10
+
+    # for wl in mcm.get_wants_list():
+    #     print wl

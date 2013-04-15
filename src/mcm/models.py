@@ -32,12 +32,13 @@ class WantList:
 
 
 class Seller:
-    def __init__(self, name):
+    def __init__(self, id, name):
+        self.id = id
         self.name = name
 
 
 class CardArticle:
-    self __init__(self, card, price, language, expansion, condition, quantity=1):
+    def __init__(self, card, price, language, expansion, condition, quantity=1):
         self.card = card
         self.price = price
         self.language = language
