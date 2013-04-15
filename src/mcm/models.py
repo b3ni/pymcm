@@ -2,9 +2,10 @@
 
 
 class Card:
-    def __init__(self, id, name=""):
+    def __init__(self, id, name="", img=""):
         self.id = id
         self.name = name
+        self.img = img
 
         self.is_metacard = id.find('idMetacard') != -1
 
@@ -32,9 +33,11 @@ class WantList:
 
 
 class Seller:
-    def __init__(self, id, name):
+    def __init__(self, id, name, country='', cls=''):
         self.id = id
         self.name = name
+        self.country = country
+        self.cls = cls
 
 
 class CardArticle:
@@ -64,9 +67,31 @@ class Ship:
 
 
 class Cart:
-    def __init__(self, hash):
+    def __init__(self, hash=''):
         self.hash = hash
         self.ships = []
 
     def total(self):
         return sum(s.total() for s in self.ships)
+
+
+class SearchResult:
+    def __init__(self, card, expansion, rarity, category, available, price_from):
+        self.card = card
+        self.expansion = expansion
+        self.rarity = rarity
+        self.category = category
+        self.available = available
+        self.price_from = price_from
+
+
+class PriceCard:
+    def __init__(self, id, card, seller, expansion, language, condition, price, available):
+        self.id = id
+        self.card = card
+        self.seller = seller
+        self.expansion = expansion
+        self.language = language
+        self.condition = condition
+        self.price = price
+        self.available = available

@@ -3,6 +3,7 @@ import mechanize
 import cookielib
 import error
 import models
+import urllib
 import urllib2
 
 import codecs
@@ -182,17 +183,132 @@ class MCMApi(object):
         url = "{0}iajax.php".format(self.base)
         referer = "{0}?mainPage=showShoppingCart".format(self.base)
 
-        #urllib2.unquote("%7BAE%5B%5CD%40HsP%40Gs%60%7F%0D%02k_VSK%5Bl%25")
-        #<button type="button" onclick="jcp('%7BAE%5B%5CD%40HsP%40Gs%60%7F%0D%02k_VSK%5Bl%25-.%266%04%0C%06%10%2A%2A%2A'+encodeURI('37716,'+ebid('sc_hashCode').value),'removeSeller','sc_ship_37716')">Remove items from this seller</button>
-        hashremove = ship.hash + urllib2.quote(str(ship.id) + ship.cart.hash, safe='~@#$&()*!+=:;,.?/\'')
-        args
+        hashremove = ship.hash + urllib2.quote("{0},{1}".format(ship.id, ship.cart.hash), safe='~@#$&()*!+=:;,.?/\'')
+        self._create_ajax_request(url, referer, "args=" + hashremove)
 
-        #response = self._create_ajax_request(url, referer)
+    def search(self, query, lang='en'):
+        pagenow = 0
+        npages = None
+        utf8_parser = etree.HTMLParser(encoding='utf-8')
 
-        print ""
+        while pagenow <= npages or npages is None:
+            print "PAGE: {0}/{1}".format(pagenow, npages)
 
-    def _create_ajax_request(self, url, referer):
-        req = mechanize.Request(url, " ")
+            self.br.open("{0}?mainPage=showSearchResult&searchFor={1}&resultsPage={2}".format(self.base, query, pagenow))
+            tree = etree.fromstring(self.br.response().read().decode('utf-8'), parser=utf8_parser)
+
+            # number of pages
+            if npages is None:
+                href = tree.xpath('//*[@id="siteContents"]/div/div[1]/span[3]/a[2]/@href')
+                npages = 1
+                if len(href):
+                    m = re.search('resultsPage=(\d+)', href[0])
+                    npages = int(m.group(1)) + 1
+
+            # serach table
+            tree = tree.xpath("//table[contains(@class, 'SearchTable')]/tbody")
+            if len(tree) == 0:
+                return
+            tree = tree[0]
+
+            # rows
+            rows = tree.xpath("tr[contains(@class, 'row_')]")
+            for row in rows:
+                result = {'img': '', 'expansion': '', 'rarity': '', 'name': '', 'id': '', 'category': '', 'available': '', 'from': 0}
+
+                data = row.xpath("td[1]//img/@onmouseover")
+                if data:
+                    m = re.search("'(.+?)'", data[0])
+                    result['img'] = m.group(1)
+
+                data = row.xpath("td[2]/span/@onmouseover")
+                if data:
+                    m = re.search("'(.+?)'", data[0])
+                    result['expansion'] = m.group(1)
+
+                data = row.xpath("td[3]/img/@onmouseover")
+                if data:
+                    m = re.search("'(.+?)'", data[0])
+                    result['rarity'] = m.group(1)
+
+                data = row.xpath("td[5]/a")
+                if data:
+                    result['id'] = data[0].attrib['href']
+                    result['name'] = data[0].text
+
+                data = row.xpath("td[6]")
+                if data:
+                    result['category'] = data[0].text
+
+                data = row.xpath("td[7]")
+                if data:
+                    result['available'] = int(data[0].text)
+
+                data = row.xpath("td[8]")
+                if data:
+                    if data[0].text == u"N/A":
+                        result['price_from'] = 0
+                    else:
+                        m = re.search("(\d+,\d+) ", data[0].text)
+                        result['price_from'] = float(m.group(1).replace(',', '.'))
+
+                c = models.Card(result['id'], name=result['name'], img=result['img'])
+                yield models.SearchResult(c, result['expansion'], result['rarity'], result['category'], result['available'], result['price_from'])
+
+            # next page
+            pagenow += 1
+
+    def list_prices(self, card, filters={}):
+        self.br.open(card.url())
+        utf8_parser = etree.HTMLParser(encoding='utf-8')
+        tree = etree.fromstring(self.br.response().read().decode('utf-8'), parser=utf8_parser)
+
+        tree = tree.xpath('//table[contains(@class, "specimenTable")]')[0]
+
+        results = []
+        for cardnode in tree.xpath('tbody/tr'):
+            node = cardnode.xpath('td[2]/span/span[1]/a')[0]
+            sellerid = node.attrib['href']
+            sellertext = node.text
+            node = cardnode.xpath('td[2]/span/span[2]/span/@onmouseover')[0]
+            m = re.search('location: ([\w\s]+)', node)
+            sellerlang = m.group(1)
+            node = cardnode.xpath('td[2]/span/span[3]/img/@onmouseover')[0]
+            m = re.search("'([\w\s]+)'", node)
+            sellerclass = m.group(1) if m else 'warning'
+
+            s = models.Seller(sellerid, sellertext, country=sellerlang, cls=sellerclass)
+
+            node = cardnode.xpath('td[3]/span/@onmouseover')[0]
+            m = re.search("'([\w\s]+)'", node)
+            expansion = m.group(1)
+
+            node = cardnode.xpath('td[5]/a/span/@onmouseover')[0]
+            m = re.search("'([\w\s-]+)'", node)
+            lang = m.group(1)
+
+            node = cardnode.xpath('td[6]/a/img/@onmouseover')[0]
+            m = re.search("'([\w\s]+)'", node)
+            condition = m.group(1)
+
+            node = cardnode.xpath('td[9]/text()')[0]
+            m = re.search("([\d,]+) ", node)
+            price = float(m.group(1).replace(',', '.'))
+
+            node = cardnode.xpath('td[10]/text()')[0]
+            quantity = int(node)
+
+            results.append(models.PriceCard('', card, s, expansion, lang, condition, price, quantity))
+
+        return results
+
+    def add_to_cart(self, pricecard):
+        self.br.open(pricecard.card.url())
+        for f in self.br.forms():
+            print f
+
+    def _create_ajax_request(self, url, referer, data):
+        req = mechanize.Request(url, data=data)
         req.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686; es-VE; rv:1.9.0.1)Gecko/2008071615 Debian/6.0 Firefox/9")
         req.add_header("Referer", referer)
         self.cj.add_cookie_header(req)
@@ -217,22 +333,32 @@ if __name__ == '__main__':
 
     mcm.login()
 
-    cart = mcm.get_cart()
-    pprint(vars(cart))
-    print "=" * 10
-    print "=" * 10
+    # cart = mcm.get_cart()
+    # pprint(vars(cart))
+    # print "=" * 10
+    # print "=" * 10
 
-    for s in cart.ships:
-        pprint(vars(s))
-        pprint(vars(s.seller))
-        for a in s.articles:
-            pprint(vars(a))
-            pprint(vars(a.card))
-        print "=" * 10
+    # for s in cart.ships:
+    #     pprint(vars(s))
+    #     pprint(vars(s.seller))
+    #     for a in s.articles:
+    #         pprint(vars(a))
+    #         pprint(vars(a.card))
+    #     print "=" * 10
 
-        mcm.remove_ship_from_cart(s)
+    #     mcm.remove_ship_from_cart(s)
 
-    print cart.total()
+    # print cart.total()
 
-    # for wl in mcm.get_wants_list():
-    #     print wl
+    # lista de wants
+    for wl in mcm.get_wants_list():
+        w = wl.wants[0]
+        break
+
+    for p in mcm.list_prices(w.card):
+        mcm.add_to_cart(p)
+        break
+
+    # search
+    # for r in mcm.search('titan'):
+    #     pprint(vars(r))

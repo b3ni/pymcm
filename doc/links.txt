@@ -1,2 +1,4 @@
 http://www.pythonforbeginners.com/cheatsheet/python-mechanize-cheat-sheet/
 http://stockrt.github.io/p/emulating-a-browser-in-python-with-mechanize/
+
+http://stackoverflow.com/questions/7263461/clicking-a-button-with-ruby-mechanize
