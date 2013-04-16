@@ -298,14 +298,33 @@ class MCMApi(object):
             node = cardnode.xpath('td[10]/text()')[0]
             quantity = int(node)
 
-            results.append(models.PriceCard('', card, s, expansion, lang, condition, price, quantity))
+            node = cardnode.xpath('td[11]//input[@type="image"]/@value')[0]
+            idprice = int(node)
+
+            results.append(models.PriceCard(idprice, card, s, expansion, lang, condition, price, quantity))
 
         return results
 
-    def add_to_cart(self, pricecard):
+    def add_to_cart(self, pricecard, amount=1):
+        if pricecard.available < 1:
+            return False
+
         self.br.open(pricecard.card.url())
+        self.br.select_form(predicate=lambda f: 'name' in f.attrs and f.attrs['name'].find('itemViewForm') != -1)
+
+        form = None
         for f in self.br.forms():
-            print f
+            if 'name' in f.attrs and f.attrs['name'].find('itemViewForm') != -1:
+                form = f
+                break
+
+        if not form:
+            return False
+
+        if amount > pricecard.available:
+            amount = pricecard.available
+
+        self.br.submit('putSingleArticleInCart{0}'.format(pricecard.id))
 
     def _create_ajax_request(self, url, referer, data):
         req = mechanize.Request(url, data=data)
@@ -356,6 +375,7 @@ if __name__ == '__main__':
         break
 
     for p in mcm.list_prices(w.card):
+        pprint(vars(p))
         mcm.add_to_cart(p)
         break
 
