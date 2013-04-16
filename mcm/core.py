@@ -3,19 +3,12 @@ import mechanize
 import cookielib
 import error
 import models
-import urllib
 import urllib2
 
 import codecs
 import datetime
-import logging
-import sys
 import re
 from lxml import etree
-
-logger = logging.getLogger("mechanize")
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel(logging.INFO)
 
 
 class MCMApi(object):
@@ -349,36 +342,8 @@ if __name__ == '__main__':
     from pprint import pprint
 
     mcm = MCMApi(username='x', password='x')
-
     mcm.login()
 
-    # cart = mcm.get_cart()
-    # pprint(vars(cart))
-    # print "=" * 10
-    # print "=" * 10
-
-    # for s in cart.ships:
-    #     pprint(vars(s))
-    #     pprint(vars(s.seller))
-    #     for a in s.articles:
-    #         pprint(vars(a))
-    #         pprint(vars(a.card))
-    #     print "=" * 10
-
-    #     mcm.remove_ship_from_cart(s)
-
-    # print cart.total()
-
-    # lista de wants
-    for wl in mcm.get_wants_list():
-        w = wl.wants[0]
-        break
-
-    for p in mcm.list_prices(w.card):
-        pprint(vars(p))
-        mcm.add_to_cart(p)
-        break
-
     # search
-    # for r in mcm.search('titan'):
-    #     pprint(vars(r))
+    for r in mcm.search('titan'):
+        pprint(vars(r))
