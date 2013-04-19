@@ -8,6 +8,12 @@ A python client for web MagicCardMarket https://www.magiccardmarket.eu/
 pip install pymcm
 ```
 
+If you install lxml from pip, will install the packages:
+
+```bash
+sudo apt-get install libxml2-dev libxslt-dev
+```
+
 ## Requires
 
   * httplib2
@@ -59,8 +65,10 @@ mcm.add_to_cart(pc)
 cart = mcm.get_cart()
 
 print cart.total()
-for 
-
+for ship in cart.ships():
+    print ship.seller.name
+    for a in ship.articles:
+        print a.card.name, a.price
 ```
 
 ## Contacts
