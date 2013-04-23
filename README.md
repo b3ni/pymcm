@@ -2,6 +2,12 @@
 
 A python client for web MagicCardMarket https://www.magiccardmarket.eu/
 
+## Requires
+
+  * httplib2
+  * mechanize
+  * lxml
+
 ## Installation
 
 ```bash
@@ -13,12 +19,6 @@ If you install lxml from pip, will install the packages:
 ```bash
 sudo apt-get install libxml2-dev libxslt-dev
 ```
-
-## Requires
-
-  * httplib2
-  * mechanize
-  * lxml
 
 ## Usage
 
