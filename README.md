@@ -34,7 +34,7 @@ for wl in mcm.get_wants_list():
     print wl.name
 
     for want_card in wl.wants:
-        print wants_card.card.name, wants_card.amount
+        print want_card.card.name, want_card.amount
 ```
 
 ### Read a card prices
@@ -59,7 +59,7 @@ mcm.add_to_cart(pc)
 cart = mcm.get_cart()
 
 print cart.total()
-for 
+for
 
 ```
 

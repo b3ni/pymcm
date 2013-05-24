@@ -319,6 +319,15 @@ class MCMApi(object):
 
         self.br.submit('putSingleArticleInCart{0}'.format(pricecard.id))
 
+    def get_my_articles(self):
+        link = self.br.find_link(url_regex="browseUserProducts")
+        self.br.follow_link(link)
+
+        utf8_parser = etree.HTMLParser(encoding='utf-8')
+        tree = etree.fromstring(self.br.response().read().decode('utf-8'), parser=utf8_parser)
+
+        raise NotImplementedError()
+
     def _create_ajax_request(self, url, referer, data):
         req = mechanize.Request(url, data=data)
         req.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686; es-VE; rv:1.9.0.1)Gecko/2008071615 Debian/6.0 Firefox/9")
@@ -341,9 +350,8 @@ class MCMApi(object):
 if __name__ == '__main__':
     from pprint import pprint
 
-    mcm = MCMApi(username='x', password='x')
+    mcm = MCMApi(username='foo', password='bar')
     mcm.login()
 
     # search
-    for r in mcm.search('titan'):
-        pprint(vars(r))
+    mcm.get_my_articles()
