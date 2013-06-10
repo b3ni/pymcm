@@ -65,15 +65,10 @@ mcm.add_to_cart(pc)
 cart = mcm.get_cart()
 
 print cart.total()
-<<<<<<< HEAD
-for
-
-=======
 for ship in cart.ships():
     print ship.seller.name
     for a in ship.articles:
         print a.card.name, a.price
->>>>>>> fe38d290a22dea0f05e364e7567f61185a5f856b
 ```
 
 ## Contacts
