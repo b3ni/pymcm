@@ -14,7 +14,7 @@ A python client for web MagicCardMarket https://www.magiccardmarket.eu/
 pip install pymcm
 ```
 
-If you install lxml from pip, will install the packages:
+If you install lxml from pip, you must install the following packages on Ubuntu.:
 
 ```bash
 sudo apt-get install libxml2-dev libxslt-dev
