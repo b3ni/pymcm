@@ -17,7 +17,7 @@ pip install pymcm
 If you install lxml from pip, you must install the following packages on Ubuntu.:
 
 ```bash
-sudo apt-get install libxml2-dev libxslt-dev
+sudo apt-get install libxml2-dev libxslt-dev libz-dev
 ```
 
 ## Usage

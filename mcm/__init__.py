@@ -1,1 +1,3 @@
-from core import MCMApi
+__version__ = "0.1.0"
+
+from api import Api
