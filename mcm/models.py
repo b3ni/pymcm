@@ -2,7 +2,32 @@
 import mcm
 
 
-class Article(object):
+class ObjectMCM(object):
+    def __init__(self, id, name):
+        self._id = id
+        self._name = name
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    def __eq__(self, other):
+        return self._id == other._id
+
+
+class Article(ObjectMCM):
 
     @staticmethod
     def parse(xml):
@@ -29,8 +54,7 @@ class Article(object):
             <isFirstEd />        // Flag, if the article is first edition (see notes)
         </article>
         """
-        article = Article()
-        article.id = mcm.txt(xml, 'idArticle')
+        article = Article(mcm.txt(xml, 'idArticle'), None)
         article.id_product = mcm.txt(xml, 'idProduct')
         article.id_lang = mcm.txt(xml, ('language', 'idLanguage'))
         article.comments = mcm.txt(xml, 'comments')
@@ -45,3 +69,67 @@ class Article(object):
         article.playset = mcm.bool(xml, 'isPlayset')
 
         return article
+
+
+class Language(ObjectMCM):
+    pass
+
+
+class Category(ObjectMCM):
+    pass
+
+
+class Expansion(ObjectMCM):
+    pass
+
+
+class Product(ObjectMCM):
+
+    @property
+    def name(self):
+        return self.names["1"]
+
+    @staticmethod
+    def parse(xml):
+        """
+        https://www.mkmapi.eu/ws/documentation/Entity:Product
+
+        <product>
+            <idProduct />         // Product's id
+            <idMetaproduct />     // Metaproduct's id
+            <name>                // A name entity for each localized version of the entity
+                <idLanguage />
+                <languageName />
+                <productName />
+            </name>
+            <category>            // A category entity for each localized version of the entity
+                <idCategory />
+                <categoryName />
+            </category>
+            <priceGuide>          // A price guide entity for each localized version of the entity
+                <SELL />
+                <LOW />
+                <AVG />
+            </priceGuide>
+            <image />             // Path to the product image
+            <expansion />         // English name for the expansion of the product (if applicable)
+            <rarity />            // Rarity of the product (if applicable)
+        </product>
+        """
+        product = Product(mcm.txt(xml, 'idProduct'), None)
+        product.id_metaproduct = mcm.txt(xml, 'idMetaproduct')
+
+        product.names = {}
+        for name in xml.findall('name'):
+            product.names[mcm.txt(name, 'idLanguage')] = mcm.txt(name, 'productName')
+
+        product.category = Category(mcm.txt(name, 'idCategory'), mcm.txt(name, 'categoryName'))
+        product.price_sell = mcm.float(xml, ('priceGuide', 'SELL'))
+        product.price_low = mcm.float(xml, ('priceGuide', 'LOW'))
+        product.price_avg = mcm.float(xml, ('priceGuide', 'AVG'))
+
+        product.image = mcm.txt(xml, 'image')
+        product.expansion = Expansion(mcm.txt(xml, 'expansion'), mcm.txt(xml, 'expansion'))
+        product.rarity = mcm.txt(xml, 'rarity')
+
+        return product

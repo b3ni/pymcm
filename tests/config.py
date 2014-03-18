@@ -34,6 +34,8 @@ def get_api():
     assert len(apikey) > 0
 
     import mcm
-    return mcm.Api(user=user, apikey=apikey)
+    _api = mcm.Api(user=user, apikey=apikey)
+
+    return _api
 
 world.api = get_api()

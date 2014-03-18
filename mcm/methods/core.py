@@ -17,9 +17,9 @@ class MethodBase(object):
     _namespace = None
 
     @classmethod
-    def create_instance(cls):
+    def create_instance(cls, api):
         obj = object.__new__(cls)
-        obj.__init__()
+        obj.__init__(api)
         return obj
 
     def __init__(self):
@@ -33,4 +33,6 @@ class MethodBase(object):
 
 
 class Method(MethodBase):
-    pass
+    def __init__(self, api):
+        self.api = api
+        self.log = self.api.log
