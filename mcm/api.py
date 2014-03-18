@@ -38,6 +38,11 @@ class Api(object):
         response = requests.get(self.urlbase + action)
         return response
 
+    def delete(self, action, data):
+        self.log.info(u"DELETE: {}".format(self.urlbase + action))
+        response = requests.delete(self.urlbase + action, data=data)
+        return response
+
     def iterate_response(self, action, params={}, tag=None, callback=None):
         def _fast_iter(context, func, func_error):
             def _clear(elem):
