@@ -12,7 +12,7 @@ class DeleteArticleStock(core.Method):
                     <amount>{}</amount>
                  </article>""".format(id_article, amount)
 
-        response = self.api.delete('stock', data={'data': xml})
+        response = self.api.delete('stock', data={'article': xml})
         if response.status_code != 200:
             return False
         else:

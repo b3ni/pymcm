@@ -12,7 +12,7 @@ setup(
     description="MagicCardMarket API client",
     long_description=LONGDESCRIPTION,
     license="MIT",
-    install_requires=["lxml", "mechanize"],
+    install_requires=["lxml", "requests"],
     author="Benito Rodríguez",
     author_email="brarcos@gmail.com",
     url="http://github.com/b3ni/pymcm",
