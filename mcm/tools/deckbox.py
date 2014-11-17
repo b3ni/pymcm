@@ -74,7 +74,8 @@ def export2csv(api, csvfilename):
         'Planeshift': u'Planeshift',
         'Portal': u'Portal',
         'Portal Second Age': u'Portal Second Age',
-        'Premium Deck Series: Fire & Lightning': u'Premium Deck Series: Fire and Lightning',
+        'Premium Deck Series: Fire & Lightning':
+        u'Premium Deck Series: Fire and Lightning',
         'Prerelease Promos': u'',  # manual
         'Prophecy': u'Prophecy',
         'Ravnica: City of Guilds': u'Ravnica: City of Guilds',
@@ -102,12 +103,16 @@ def export2csv(api, csvfilename):
     }
 
     csvfile_fail = codecs.open(csvfilename + 'fail', 'w')
-    writer_fail = UnicodeWriter(csvfile_fail, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    writer_fail = UnicodeWriter(csvfile_fail, delimiter=',', quotechar='"',
+                                quoting=csv.QUOTE_MINIMAL)
 
     pack = 1
     csvfile = codecs.open(csvfilename + str(pack), 'w')
-    writer = UnicodeWriter(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    writer.writerow([u'Count', u'Tradelist Count', u'Name', u'Foil', u'Textless', u'Promo', u'Signed', u'Edition', u'Condition', u'Language'])
+    writer = UnicodeWriter(csvfile, delimiter=',', quotechar='"',
+                           quoting=csv.QUOTE_MINIMAL)
+    writer.writerow([u'Count', u'Tradelist Count', u'Name', u'Foil',
+                     u'Textless', u'Promo', u'Signed', u'Edition',
+                     u'Condition', u'Language'])
 
     print "=" * 40, "Pack {}".format(pack), "=" * 40
 
@@ -117,17 +122,20 @@ def export2csv(api, csvfilename):
         if article.condition not in conditions:
             csvfile.close()
             csvfile_fail.close()
-            raise Exception(u"Condition '{}' not defined".format(article.condition))
+            raise Exception(u"Condition '{}' not defined".format(
+                article.condition))
 
         if article.id_lang not in languages:
             csvfile.close()
             csvfile_fail.close()
-            raise Exception(u"Id lang '{}' not defined".format(article.id_lang))
+            raise Exception(u"Id lang '{}' not defined".format(
+                article.id_lang))
 
         if product.expansion.name not in expansions:
             csvfile.close()
             csvfile_fail.close()
-            raise Exception(u"Expasion name '{}' not defined".format(product.expansion.name))
+            raise Exception(u"Expasion name '{}' not defined".format(
+                product.expansion.name))
 
         # check character rare Æther Tide
         try:
@@ -152,7 +160,8 @@ def export2csv(api, csvfilename):
                languages[article.id_lang]]
 
         # special edition
-        if product.expansion.name in ('Duels of the Planeswalkers Promos', 'Gateway Promos'):
+        if product.expansion.name in ('Duels of the Planeswalkers Promos',
+                                      'Gateway Promos'):
             row[3] = 'foil'
             row[5] = 'promo'
 
@@ -172,8 +181,11 @@ def export2csv(api, csvfilename):
             pack += 1
             print "=" * 40, "Pack {}".format(pack), "=" * 40
             csvfile = codecs.open(csvfilename + str(pack), 'wb')
-            writer = UnicodeWriter(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([u'Count', u'Tradelist Count', u'Name', u'Foil', u'Textless', u'Promo', u'Signed', u'Edition', u'Condition', u'Language'])
+            writer = UnicodeWriter(csvfile, delimiter=',', quotechar='"',
+                                   quoting=csv.QUOTE_MINIMAL)
+            writer.writerow([u'Count', u'Tradelist Count', u'Name', u'Foil',
+                             u'Textless', u'Promo', u'Signed', u'Edition',
+                             u'Condition', u'Language'])
 
     csvfile.close()
     csvfile_fail.close()

@@ -37,7 +37,7 @@ class Article(ObjectMCM):
         <article>
             <idArticle />        // Article's ID
             <idProduct />        // Product's ID
-            <language>           // Language entity for the language of the article
+            <language>           // Language entity for the lang of the article
                 <idLanguage />
                 <languageName />
             </language>
@@ -50,8 +50,8 @@ class Article(ObjectMCM):
             <isFoil />           // Flag, if the article is foil (see notes)
             <isSigned />         // Flag, if the article is signed (see notes)
             <isAltered />        // Flag, if the article is altered (see notes)
-            <isPlayset />        // Flag, if the article is offered as playset (see notes)
-            <isFirstEd />        // Flag, if the article is first edition (see notes)
+            <isPlayset />        // Flag, if the article is offered as playset
+            <isFirstEd />        // Flag, if the article is first edition
         </article>
         """
         article = Article(mcm.txt(xml, 'idArticle'), None)
@@ -97,22 +97,22 @@ class Product(ObjectMCM):
         <product>
             <idProduct />         // Product's id
             <idMetaproduct />     // Metaproduct's id
-            <name>                // A name entity for each localized version of the entity
+            <name>
                 <idLanguage />
                 <languageName />
                 <productName />
             </name>
-            <category>            // A category entity for each localized version of the entity
+            <category>
                 <idCategory />
                 <categoryName />
             </category>
-            <priceGuide>          // A price guide entity for each localized version of the entity
+            <priceGuide>
                 <SELL />
                 <LOW />
                 <AVG />
             </priceGuide>
             <image />             // Path to the product image
-            <expansion />         // English name for the expansion of the product (if applicable)
+            <expansion />
             <rarity />            // Rarity of the product (if applicable)
         </product>
         """
@@ -121,15 +121,18 @@ class Product(ObjectMCM):
 
         product.names = {}
         for name in xml.findall('name'):
-            product.names[mcm.txt(name, 'idLanguage')] = mcm.txt(name, 'productName')
+            product.names[mcm.txt(name, 'idLanguage')] = \
+                mcm.txt(name, 'productName')
 
-        product.category = Category(mcm.txt(name, 'idCategory'), mcm.txt(name, 'categoryName'))
+        product.category = Category(mcm.txt(name, 'idCategory'),
+                                    mcm.txt(name, 'categoryName'))
         product.price_sell = mcm.float(xml, ('priceGuide', 'SELL'))
         product.price_low = mcm.float(xml, ('priceGuide', 'LOW'))
         product.price_avg = mcm.float(xml, ('priceGuide', 'AVG'))
 
         product.image = mcm.txt(xml, 'image')
-        product.expansion = Expansion(mcm.txt(xml, 'expansion'), mcm.txt(xml, 'expansion'))
+        product.expansion = Expansion(mcm.txt(xml, 'expansion'),
+                                      mcm.txt(xml, 'expansion'))
         product.rarity = mcm.txt(xml, 'rarity')
 
         return product

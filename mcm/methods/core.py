@@ -25,11 +25,13 @@ class MethodBase(object):
     def __init__(self):
         if not self._name:
             name = type(self).__name__.split('.')[0]
-            raise ValueError("The class %s has to have a _name attribute" % name)
+            raise ValueError("The class %s has to have a _name attribute" %
+                             name)
 
         if not self._namespace:
             name = type(self).__name__.split('.')[0]
-            raise ValueError("The class %s has to have a _namespace attribute" % name)
+            raise ValueError("The class %s has to have a _namespace attribute"
+                             % name)
 
 
 class Method(MethodBase):

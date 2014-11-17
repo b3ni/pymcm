@@ -13,7 +13,11 @@ class GetStock(core.Method):
         start = 1
 
         while True:
-            response = self.api.iterate_response(u'{}/{}'.format(self._name, start), tag='article', callback=self._parse_article)
+            response = self.api.iterate_response(
+                u'{}/{}'.format(self._name, start),
+                tag='article',
+                callback=self._parse_article)
+
             status_code = response.status_code
 
             for article in self._response:

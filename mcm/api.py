@@ -30,10 +30,10 @@ class Api(object):
 
     @property
     def urlbase(self):
-        return "https://www.mkmapi.eu/ws/{user}/{key}/".format(user=self.user, key=self.apikey)
+        return "https://www.mkmapi.eu/ws/{user}/{key}/".format(user=self.user,
+                                                               key=self.apikey)
 
     def get(self, action, params={}):
-        # http://docs.python-requests.org/en/latest/api/#requests.Response.iter_content
         self.log.info("GET: {}".format(self.urlbase + action))
         response = requests.get(self.urlbase + action)
         return response
@@ -52,8 +52,6 @@ class Api(object):
                 pass
 
             for index, (event, elem) in enumerate(context):
-                #self.log.info("type: {} value: {}".format(type(elem.tag), elem.tag))
-
                 if elem.tag == 'errors':
                     func_error(elem)
                     break
@@ -67,7 +65,8 @@ class Api(object):
         #self.log.debug("RESPONSE:\n{}".format(response.content))
 
         if response.content:
-            context = etree.iterparse(StringIO(response.content), events=('end',))
+            context = etree.iterparse(StringIO(response.content),
+                                      events=('end',))
             _fast_iter(context, callback, self._callback_error)
 
         return response
